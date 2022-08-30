@@ -209,6 +209,8 @@
             prefix: oadp # Optional if this bucket use with more than app
   ```
   
+  Run following command
+  
   ```bash
   oc create -f DataProtectionApplication.yaml
   ```
