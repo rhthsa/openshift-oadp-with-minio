@@ -1,0 +1,17 @@
+apiVersion: velero.io/v1
+kind: Restore
+metadata:
+  name: todo
+  namespace: openshift-adp
+spec:
+  backupName: <name>
+  defaultVolumesToRestic: true
+  excludedResources:
+  - nodes
+  - events
+  - events.events.k8s.io
+  - backups.velero.io
+  - restores.velero.io
+  - resticrepositories.velero.io
+  #- route
+  restorePVs: true

@@ -1,0 +1,15 @@
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: todo
+  namespace: openshift-adp
+spec:
+  defaultVolumesToRestic: true
+  schedule: 0 5 * * * 
+  template:
+    hooks: {}
+    includedNamespaces:
+    - todo
+    storageLocation: app-backup-1 
+    defaultVolumesToRestic: true 
+    ttl: 720h0m0s
