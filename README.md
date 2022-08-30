@@ -176,6 +176,38 @@
   ```
 
 - Create [DataProtectionApplication](DataProtectionApplication.yaml)
+
+  ```yaml
+  apiVersion: oadp.openshift.io/v1alpha1
+  kind: DataProtectionApplication
+  metadata:
+    name: app-backup
+    namespace: openshift-adp
+  spec:
+    configuration:
+      velero:
+        defaultPlugins:
+          - aws 
+          - openshift # Mandatory
+      restic:
+        enable: true # If you don't have CSI then you need to enable restic
+    backupLocations:
+      - velero:
+          config:
+            profile: "default"
+            region: minio
+            s3Url: http://minio.minio.svc.cluster.local:80 
+            insecureSkipTLSVerify: "true"
+            s3ForcePathStyle: "true"
+          provider: aws
+          default: true
+          credential:
+            key: cloud
+            name: cloud-credentials # Default. Can be removed 
+          objectStorage:
+            bucket: cluster1
+            prefix: oadp # Optional if this bucket use with more than app
+  ```
   
   ```bash
   oc create -f DataProtectionApplication.yaml
