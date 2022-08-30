@@ -155,6 +155,8 @@
 
 - Add couple of your tasks to todo app
   
+  ![](images/todo-app.png)
+  
 ## OADP Operator
 
 - Install OADP Operator from OperatorHub
