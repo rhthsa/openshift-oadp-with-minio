@@ -4,7 +4,7 @@ metadata:
   name: todo
   namespace: openshift-adp
 spec:
-  backupName: <name>
+  backupName: BACKUP_NAME
   defaultVolumesToRestic: true
   excludedResources:
   - nodes
