@@ -317,6 +317,10 @@
   todo-20220830142634   18m
   ```
 
+  Or use OpenShift Admin Console
+
+  ![](images/oadp-operator-backup-list.png)
+
 - Edit [restore-todo.yaml](restore-todo.yaml) and replace spec.backupName with name from previous step.
   
   ```yaml
