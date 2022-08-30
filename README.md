@@ -331,6 +331,7 @@
 ### Restore
   
 - Delete deployment and pvc in namespace todo
+  
   ```bash
   oc delete deployment/todo-db -n todo
   oc delete pvc todo-db -n todo
