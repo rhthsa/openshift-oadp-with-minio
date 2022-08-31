@@ -8,6 +8,7 @@
     - [Restore](#restore)
 
 ## MinIO
+
 - Install Minio Operator from OperatorHub
   
   ![](images/minio-operator-operatorhub.png)
@@ -41,11 +42,16 @@
   oc create route edge minio-console --service=console --port=9090 -n openshift-operators
   ```
 
+  ![](images/minio-dev-console-topology.png)
+
 - Login with JWT token extracted from secret
 
   ```bash
   oc get secret/console-sa-secret -o jsonpath='{.data.token}' -n openshift-operators | base64 -d
   ```
+  
+  ![](images/minio-operator-console.png)
+
 - Create project minio
   
   ```bash
@@ -83,10 +89,13 @@
 
   - Audit: Disabled
   - Monitoring: Disabled
-  - Click Create
+  - Click Create and wait for tenant creation
+
+    ![](images/minio-tenant-creation-on-progress.png)
 
 - Edit Security Context for console
   - Login to OpenShift Admin Console
+  - Select namespace minio
   - Operators->Installed Operators->Minio Operator->Tenant
   - Edit YAML. Add following lines to spec:
     
@@ -98,14 +107,26 @@
         runAsNonRoot: true
         runAsUser: <supplemental-groups> 
     ```
+
 - Verify that Tenant is up and running
+
+  ![](images/minio-console-tenant-ready.png)
+
+  Details
 
   ![](images/minio-console-tenant.png)
 
-- Create Route for Tenant Console
+  check stateful set
 
   ```bash
-  oc create route edge oadp-console --service=oadp-console --port=9090 -n minio
+  oc get statefulset -n minio
+  ```
+
+  Output
+
+  ```bash
+  NAME              READY   AGE
+  cluster1-pool-0   4/4     18m
   ```
 
 - Verify CPU and Memory consumed by MinIO in namesapce minio
@@ -117,6 +138,12 @@
   Memory utilization
 
   ![](images/minio-memory-reqeust-limit.png)
+
+- Create Route for Tenant Console
+
+  ```bash
+  oc create route edge oadp-console --service=oadp-console --port=9090 -n minio
+  ```
 
 - Login to tenant console with user you specified while creating tenant and create bucket name cluster1 
   
