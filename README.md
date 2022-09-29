@@ -455,4 +455,4 @@
 - Install OADP operator
 - Create secret cloud-credentials to access minio bucket
 - Create [DataProtectionApplication](config/DataProtectionApplication.yaml) with s3url point to minio's route
-- Create [Restore](confing/restore-todo.yaml)
+- Create [Restore](config/restore-todo.yaml)
