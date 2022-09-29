@@ -6,6 +6,7 @@
     - [Backup](#backup)
     - [Schedule Backup](#schedule-backup)
     - [Restore](#restore)
+  - [Restore from another cluster](#restore-from-another-cluster)
 
 ## MinIO
 
@@ -145,6 +146,12 @@
   oc create route edge oadp-console --service=oadp-console --port=9090 -n minio
   ```
 
+- Create Route for Minio
+
+  ```bash
+  oc create route edge minio --service=minio -n minio
+  ```
+
 - Login to tenant console with user you specified while creating tenant and create bucket name cluster1 
   
   Login page
@@ -208,7 +215,7 @@
 
   ```yaml
   apiVersion: oadp.openshift.io/v1alpha1
-  kind: DataProtectionApplication
+  kind: c
   metadata:
     name: app-backup
     namespace: openshift-adp
@@ -443,3 +450,9 @@
   ```
 
 - Verify todo apps.
+
+## Restore from another cluster
+- Install OADP operator
+- Create secret cloud-credentials to access minio bucket
+- Create DataProtectionApplication with s3url point to minio's route
+- Create Restore
