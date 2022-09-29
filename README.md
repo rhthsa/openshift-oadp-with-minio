@@ -211,7 +211,7 @@
   oc create secret generic cloud-credentials -n openshift-adp --from-file cloud=credentials-velero
   ```
 
-- Create [DataProtectionApplication](DataProtectionApplication.yaml)
+- Create [DataProtectionApplication](config/DataProtectionApplication.yaml)
 
   ```yaml
   apiVersion: oadp.openshift.io/v1alpha1
@@ -248,7 +248,7 @@
   Run following command
   
   ```bash
-  oc create -f DataProtectionApplication.yaml
+  oc create -f config/DataProtectionApplication.yaml
   ```
 
 - Verify that BackupStorageLocation is ready
@@ -268,7 +268,7 @@
 
 ### Backup
 
-- Create [backup configuration](backup-todo.yaml) for namespace todo
+- Create [backup configuration](config/backup-todo.yaml) for namespace todo
 
   ```yaml
   apiVersion: velero.io/v1
@@ -290,7 +290,7 @@
   Run following command
 
   ```bash
-  oc create -f backup-todo.yaml
+  oc create -f config/backup-todo.yaml
   ```
 
 - Verify backup status
@@ -322,7 +322,7 @@
 
 ### Schedule Backup
 
-- Create [schedule](schedule-todo.yaml) for backup namespace todo
+- Create [schedule](config/schedule-todo.yaml) for backup namespace todo
   
   ```yaml
   apiVersion: velero.io/v1
@@ -345,7 +345,7 @@
   Create schedule backup
 
   ```bash
-  oc create -f schedule-todo.yaml
+  oc create -f config/schedule-todo.yaml
   ```
   
   - Check result after schedule is created. 
@@ -392,7 +392,7 @@
 
   ![](images/oadp-operator-backup-list.png)
 
-- Edit [restore-todo.yaml](restore-todo.yaml) and replace spec.backupName with name from previous step.
+- Edit [restore-todo.yaml](config/restore-todo.yaml) and replace spec.backupName with name from previous step.
   
   ```yaml
   apiVersion: velero.io/v1
@@ -416,7 +416,7 @@
   Run following command
   
   ```bash
-  oc create -f restore-todo.yaml
+  oc create -f config/restore-todo.yaml
   ```
   
   Check for restore status
@@ -454,5 +454,5 @@
 ## Restore from another cluster
 - Install OADP operator
 - Create secret cloud-credentials to access minio bucket
-- Create DataProtectionApplication with s3url point to minio's route
-- Create Restore
+- Create [DataProtectionApplication](config/DataProtectionApplication.yaml) with s3url point to minio's route
+- Create [Restore](confing/restore-todo.yaml)
