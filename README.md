@@ -7,6 +7,7 @@
     - [Schedule Backup](#schedule-backup)
     - [Restore](#restore)
   - [Restore from another cluster](#restore-from-another-cluster)
+  - [Minio Client](#minio-client)
 
 ## MinIO
 
@@ -215,7 +216,7 @@
 
   ```yaml
   apiVersion: oadp.openshift.io/v1alpha1
-  kind: c
+  kind: DataProtectionApplication
   metadata:
     name: app-backup
     namespace: openshift-adp
@@ -312,6 +313,23 @@
       "totalItems": 69
     },
     "startTimestamp": "2022-08-30T09:49:24Z",
+    "version": 1
+  }
+  ```
+
+  Test with 10GB data
+
+  ```json
+  {
+    "completionTimestamp": "2022-10-12T12:51:45Z",
+    "expiration": "2022-11-11T12:50:18Z",
+    "formatVersion": "1.1.0",
+    "phase": "Completed",
+    "progress": {
+      "itemsBackedUp": 89,
+      "totalItems": 89
+    },
+    "startTimestamp": "2022-10-12T12:50:18Z",
     "version": 1
   }
   ```
@@ -456,3 +474,23 @@
 - Create secret cloud-credentials to access minio bucket
 - Create [DataProtectionApplication](config/DataProtectionApplication.yaml) with s3url point to minio's route
 - Create [Restore](config/restore-todo.yaml)
+
+## Minio Client
+- Install [Minio Client](https://github.com/minio/mc)
+- Configure alias to MinIO with alias name minio
+  
+  ```bash
+  mc alias set minio <URL> <KEY> <SECRET>
+  mc alais ls
+  ```
+- Copy from minio bucket to local
+  
+  ```bash
+  mc cp --recursive minio/cluster1 .
+  ```
+
+  Output
+  
+  ```bash
+  ...re-todo-results.gz: 19.52 MiB / 19.52 MiB ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.27 MiB/s 8s
+  ```
