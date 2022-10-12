@@ -483,7 +483,7 @@
   mc alias set minio <URL> <KEY> <SECRET>
   mc alais ls
   ```
-- Copy from minio bucket to local
+- Copy from bucket cluster1 to current directory
   
   ```bash
   mc cp --recursive minio/cluster1 .
@@ -493,4 +493,24 @@
   
   ```bash
   ...re-todo-results.gz: 19.52 MiB / 19.52 MiB ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.27 MiB/s 8s
+  ```
+
+- Verify data
+  
+  ```bash
+  cluster1
+  └── oadp
+      ├── backups
+      │   └── todo
+      │       ├── todo-csi-volumesnapshotclasses.json.gz
+      │       ├── todo-csi-volumesnapshotcontents.json.gz
+      │       ├── todo-csi-volumesnapshots.json.gz
+      │       ├── todo-logs.gz
+      │       ├── todo-podvolumebackups.json.gz
+      │       ├── todo-resource-list.json.gz
+      │       ├── todo-volumesnapshots.json.gz
+      │       ├── todo.tar.gz
+      │       └── velero-backup.json
+      ├── restic
+      │   └── todo
   ```
