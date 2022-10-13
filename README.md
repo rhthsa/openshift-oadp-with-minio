@@ -514,3 +514,15 @@
       ├── restic
       │   └── todo
   ```
+
+- Copy from local to minio
+
+  ```bash
+  mc cp --recursive cluster1/oadp minio/cluster1
+  ```
+
+  Output
+
+  ```bash
+  .../restore-todo-results.gz: 19.52 MiB / 19.52 MiB ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.83 MiB/s 4s
+  ```
