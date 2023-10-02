@@ -1,6 +1,8 @@
-# OADP with MinIO
-- [OADP with MinIO](#oadp-with-minio)
-  - [MinIO](#minio)
+# OADP
+- [OADP](#oadp)
+  - [Object Storage Preparation](#object-storage-preparation)
+    - [AWS S3](#aws-s3)
+    - [MinIO](#minio)
   - [Sample Todo App](#sample-todo-app)
   - [OADP Operator](#oadp-operator)
     - [Backup](#backup)
@@ -9,7 +11,23 @@
   - [Restore from another cluster](#restore-from-another-cluster)
   - [Minio Client](#minio-client)
 
-## MinIO
+## Object Storage Preparation
+Prepare your Object Storage configuration. In case of Amazon S3
+- Bucket
+- Region
+- Access Key ID
+- Access Key
+### AWS S3
+- This demo use existing S3 bucket used by OpenShift's Image Registry
+  
+  ```bash
+  S3_BUCKET=$(oc get configs.imageregistry.operator.openshift.io/cluster -o jsonpath='{.spec.storage.s3.bucket}' -n openshift-image-registry)
+  AWS_REGION=$(oc get configs.imageregistry.operator.openshift.io/cluster -o jsonpath='{.spec.storage.s3.region}' -n openshift-image-registry)
+  AWS_ACCESS_KEY_ID=$(oc get secret image-registry-private-configuration -o jsonpath='{.data.credentials}' -n openshift-image-registry|base64 -d|grep aws_access_key_id|awk -F'=' '{print $2}'|sed 's/^[ ]*//')
+  AWS_SECRET_ACCESS_KEY=$(oc get secret image-registry-private-configuration -o jsonpath='{.data.credentials}' -n openshift-image-registry|base64 -d|grep aws_secret_access_key|awk -F'=' '{print $2}'|sed 's/^[ ]*//')
+
+  ```
+### MinIO
 
 - Install Minio Operator from OperatorHub
   
@@ -187,7 +205,33 @@
   servicemonitor.monitoring.coreos.com/todo created
   route.route.openshift.io/todo created
   ```
+- Setup Database
+  
+  ```bash
+  TODO_DB_POD=$(oc get po -l app=todo-db -n todo --no-headers|awk '{print $1}')
+  oc cp config/todo.sql $TODO_DB_POD:/tmp -n todo
+  oc exec $TODO_DB_POD -- psql -Utodo -dtodo -a -f /tmp/todo.sql
+  ```
 
+  Output
+
+  ```bash
+  drop table if exists Todo;
+  DROP TABLE
+  drop sequence if exists Todo_SEQ;
+  DROP SEQUENCE
+  create sequence Todo_SEQ start 1 increment 1;
+  CREATE SEQUENCE
+  create table Todo (
+        id int8 not null,
+        completed boolean not null,
+        ordering int4,
+        title varchar(255),
+        url varchar(255),
+        primary key (id)
+      );
+  CREATE TABLE
+  ```
 - Add couple of your tasks to todo app
   
   ![](images/todo-app.png)
