@@ -630,12 +630,12 @@ Prepare your Object Storage configuration. In case of Amazon S3
   ```bash
   grafanadatasource.grafana.integreatly.org/grafana-datasource created
   ```
-- Create [Dashboard](config/grafana-dashboard.yaml)
+<!-- - Create [Dashboard](config/grafana-dashboard.yaml)
 
   ```bash
   oc create -f config/grafana-dashboard.yaml
-  ``` 
-
+  ```  -->
+- Grafana Dashboard (WIP)
 ## Restore from another cluster
 - Install OADP operator
 - Create secret cloud-credentials to access minio bucket
