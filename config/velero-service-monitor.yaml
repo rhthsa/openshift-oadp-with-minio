@@ -1,0 +1,28 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: openshift-adp-velero-metrics
+  namespace: openshift-adp
+  labels:
+    app.kubernetes.io/component: server
+    app.kubernetes.io/instance: app-backup
+    app.kubernetes.io/managed-by: oadp-operator
+    app.kubernetes.io/name: velero
+    openshift.io/oadp: "True"
+spec:
+  endpoints:
+  - interval: 30s
+    metricRelabelings:
+    - action: keep
+      sourceLabels:
+      - __name__
+    port: monitoring
+    path: /metrics
+    scheme: http
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: server
+      app.kubernetes.io/instance: app-backup
+      app.kubernetes.io/managed-by: oadp-operator
+      app.kubernetes.io/name: velero
+      openshift.io/oadp: "True"

@@ -1,0 +1,11 @@
+kind: GrafanaDashboard
+apiVersion: grafana.integreatly.org/v1beta1
+metadata:
+  name: oadp
+  namespace: application-monitor
+spec:
+  instanceSelector:
+    matchLabels:
+      app: grafana
+  customFolderName: "OADP"      
+  url: https://raw.githubusercontent.com/leoaaraujo/oadp-dashboard/main/files/oadp-dash.json

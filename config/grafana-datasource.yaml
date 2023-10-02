@@ -1,0 +1,27 @@
+kind: GrafanaDatasource
+apiVersion: grafana.integreatly.org/v1beta1
+metadata:
+  name: grafana-datasource
+spec:
+  datasource:
+    access: proxy
+    editable: true
+    isDefault: true
+    jsonData:
+      httpHeaderName1: 'Authorization'
+      tlsSkipVerify: true
+      timeInterval: 5s
+    name: prometheus
+    secureJsonData:
+      httpHeaderValue1: 'Bearer '
+    type: prometheus
+    url: 'https://thanos-querier.openshift-monitoring.svc.cluster.local:9091'
+  name: grafana-datasources.yaml
+  instanceSelector: 
+    matchLabels:
+      app: grafana
+  plugins:
+    - name: grafana-clock-panel
+      version: 1.3.0
+
+

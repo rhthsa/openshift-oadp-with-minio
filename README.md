@@ -8,6 +8,7 @@
     - [Backup](#backup)
     - [Schedule Backup](#schedule-backup)
     - [Restore](#restore)
+  - [Monitor OADP](#monitor-oadp)
   - [Restore from another cluster](#restore-from-another-cluster)
 - [Minio Client](#minio-client)
 
@@ -515,6 +516,125 @@ Prepare your Object Storage configuration. In case of Amazon S3
   ```
 
 - Verify todo apps.
+
+## Monitor OADP
+- Ensure that user workload monitoring is enabled by checking configmap cluster-monitoring-config in namespace openshift-monitoring
+  
+  ```yaml
+  data:
+    config.yaml: |
+      enableUserWorkload: true
+  ```
+  
+  Create [configmap](config/cluster-monitoring-config.yaml) in case of it is not configured yet.
+
+  ```bash
+  oc create -f config/cluster-monitoring-config.yaml
+  ```
+  
+  Verify user workload monitoring
+
+  ```bash
+  oc -n openshift-user-workload-monitoring get pods
+  ```
+
+  Output
+
+  ```bash
+  NAME                                  READY   STATUS    RESTARTS   AGE
+  prometheus-operator-cf59f9bdc-ktcvg   2/2     Running   0          3m23s
+  prometheus-user-workload-0            6/6     Running   0          3m22s
+  prometheus-user-workload-1            6/6     Running   0          3m22s
+  thanos-ruler-user-workload-0          4/4     Running   0          3m16s
+  thanos-ruler-user-workload-1          4/4     Running   0          3m16s
+  ```
+- Check for metrics
+  
+  ```bash
+  oc exec -n todo \
+  $(oc get po -n todo -l app=todo --no-headers|awk '{print $1}'|head -n 1) \
+  -- curl -s http://openshift-adp-velero-metrics-svc.openshift-adp:8085/metrics
+  ```
+
+  Output
+
+  ```
+  # TYPE velero_restore_failed_total counter
+  velero_restore_failed_total{schedule=""} 0
+  # HELP velero_restore_partial_failure_total Total number of partially failed restores
+  # TYPE velero_restore_partial_failure_total counter
+  velero_restore_partial_failure_total{schedule=""} 0
+  # HELP velero_restore_success_total Total number of successful restores
+  # TYPE velero_restore_success_total counter
+  velero_restore_success_total{schedule=""} 2
+  # HELP velero_restore_total Current number of existent restores
+  # TYPE velero_restore_total gauge
+  velero_restore_total 1  
+  ```
+
+- Create [Service Monitor](config/velero-service-monitor.yaml) for Velero service
+  
+  ```bash
+  oc create -f config/velero-service-monitor.yaml
+  ```
+
+- Use Developer Console to verify Velero's metrics
+  
+  ![](images/velero-metrics.png)
+
+
+  Backup Total Metrics
+
+  ![](images/velero-backup-total-metrics.png)
+  
+- Install Grafana Operator
+  - Create project
+
+    ```bash
+    oc new-project application-monitor --display-name="App Dashboard" --description="Grafana Dashboard for Application Monitoring"
+    ```
+  
+  - Install Grafana Operator to project application-monitor
+    
+    ![](images/grafana-operator.png)
+
+- Create [Grafana instance](config/grafana.yaml)
+  
+  ```bash
+  oc apply -f config/grafana.yaml -n application-monitor
+  watch -d oc get pods -n application-monitor
+  ```
+  
+  Sample Output
+  
+  ```bash
+  NAME                                                   READY   STATUS    RESTARTS   AGE
+  grafana-deployment-bbffb76b6-lb7r9                     1/1     Running   0          28s
+  grafana-operator-controller-manager-6b5cf867c8-b5tql   1/1     Running   0          5m29s
+  ```
+
+- Add cluster role `cluster-monitoring-view` to Grafana ServiceAccount
+
+  ```bash
+  oc adm policy add-cluster-role-to-user cluster-monitoring-view \
+  -z grafana-sa -n application-monitor
+  ``` 
+- Create [Grafana DataSource](config/grafana-datasource.yaml) with serviceaccount grafana-serviceaccount's token and connect to thanos-querier
+  
+  ```bash
+  TOKEN=$(oc create token grafana-sa -n application-monitor)
+  cat config/grafana-datasource.yaml|sed 's/Bearer .*/Bearer '"$TOKEN""'"'/'|oc apply -n application-monitor -f -
+  ```  
+  Output
+  
+  ```bash
+  grafanadatasource.grafana.integreatly.org/grafana-datasource created
+  ```
+- Create [Dashboard](config/grafana-dashboard.yaml)
+
+  ```bash
+  oc create -f config/grafana-dashboard.yaml
+  ``` 
 
 ## Restore from another cluster
 - Install OADP operator
