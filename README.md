@@ -9,7 +9,7 @@
     - [Schedule Backup](#schedule-backup)
     - [Restore](#restore)
   - [Restore from another cluster](#restore-from-another-cluster)
-  - [Minio Client](#minio-client)
+- [Minio Client](#minio-client)
 
 ## Object Storage Preparation
 Prepare your Object Storage configuration. In case of Amazon S3
@@ -268,16 +268,17 @@ Prepare your Object Storage configuration. In case of Amazon S3
     configuration:
       velero:
         defaultPlugins:
-          - aws 
-          - openshift # Mandatory
+          - aws
+          - openshift 
       restic:
         enable: true # If you don't have CSI then you need to enable restic
     backupLocations:
       - velero:
           config:
             profile: "default"
-            region: minio
-            s3Url: http://minio.minio.svc.cluster.local:80 
+            region: AWS_REGION  # In case of minio, use minio
+            # In case of Minio, http://minio.minio.svc.cluster.local:80
+            s3Url: https://s3.AWS_REGION.amazonaws.com
             insecureSkipTLSVerify: "true"
             s3ForcePathStyle: "true"
           provider: aws
@@ -286,8 +287,9 @@ Prepare your Object Storage configuration. In case of Amazon S3
             key: cloud
             name: cloud-credentials # Default. Can be removed 
           objectStorage:
-            bucket: cluster1
-            prefix: oadp # Optional if this bucket use with more than app
+            bucket: S3_BUCKET
+            prefix: oadp # Optional
+
   ```
   
   Run following command
@@ -463,7 +465,7 @@ Prepare your Object Storage configuration. In case of Amazon S3
     name: todo
     namespace: openshift-adp
   spec:
-    backupName: <backup name> 
+    backupName: BACKUP_NAME 
     excludedResources:
     - nodes
     - events
@@ -474,11 +476,12 @@ Prepare your Object Storage configuration. In case of Amazon S3
     - route
     restorePVs: true
   ```
-  
+ 
   Run following command
   
   ```bash
-  oc create -f config/restore-todo.yaml
+  BACKUP_NAME=<backup name>
+  cat config/restore-todo.yaml| sed 's/BACKUP_NAME/'$BACKUP_NAME'/' |  oc create -f -
   ```
   
   Check for restore status
@@ -519,7 +522,7 @@ Prepare your Object Storage configuration. In case of Amazon S3
 - Create [DataProtectionApplication](config/DataProtectionApplication.yaml) with s3url point to minio's route
 - Create [Restore](config/restore-todo.yaml)
 
-## Minio Client
+# Minio Client
 - Install [Minio Client](https://github.com/minio/mc)
 - Configure alias to MinIO with alias name minio
   
