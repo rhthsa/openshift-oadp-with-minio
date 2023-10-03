@@ -5,7 +5,7 @@ metadata:
   namespace: openshift-adp
 spec:
   defaultVolumesToRestic: true
-  schedule: 0 5 * * * 
+  schedule: '*/5 * * * *' # Backup every 5 minutes for demo purpose. You may use 0 5 * * *
   template:
     hooks: {}
     includedNamespaces:

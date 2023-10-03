@@ -397,7 +397,7 @@ Prepare your Object Storage configuration. In case of Amazon S3
     namespace: openshift-adp
   spec:
     defaultVolumesToRestic: true
-    schedule: 0 5 * * * #crontab format for schedule backup
+    schedule: '*/5 * * * *' # Backup every 5 minutes for demo purpose. 
     template:
       hooks: {}
       includedNamespaces:
@@ -422,10 +422,14 @@ Prepare your Object Storage configuration. In case of Amazon S3
   
   ```json
   {
-    "lastBackup": "2022-08-30T13:51:32Z",
+    "lastBackup": "2023-10-03T06:20:02Z",
     "phase": "Enabled"
   }
   ```
+
+  Check in developer console
+
+  ![](images/oadp-backup-schedule.png)
 
 ### Restore
   
