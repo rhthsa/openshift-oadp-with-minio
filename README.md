@@ -285,7 +285,12 @@ Prepare your Object Storage configuration. In case of Amazon S3
   ```
 
 - Create [DataProtectionApplication](config/DataProtectionApplication.yaml)
-
+  
+  - Check for
+    - REGION
+    - ENDPOINT
+    - S3_BUCKET
+  
   ```yaml
   apiVersion: oadp.openshift.io/v1alpha1
   kind: DataProtectionApplication
@@ -304,11 +309,11 @@ Prepare your Object Storage configuration. In case of Amazon S3
       - velero:
           config:
             profile: "default"
-            region: AWS_REGION  # In case of minio, use minio
+            region: REGION # In case of minio, use minio
             # In case of Minio, http://minio.minio.svc.cluster.local:80
-            s3Url: https://s3.AWS_REGION.amazonaws.com
+            s3Url: ENDPOINT 
             insecureSkipTLSVerify: "true"
-            s3ForcePathStyle: "true"
+            s3ForcePathStyle: "false"
           provider: aws
           default: true
           credential:
@@ -319,17 +324,21 @@ Prepare your Object Storage configuration. In case of Amazon S3
             prefix: oadp # Optional
 
   ```
-  
-  Run following command
+
+- Run following command
   
   ```bash
-  oc create -f config/DataProtectionApplication.yaml
+  cat config/DataProtectionApplication.yaml \
+      |sed 's/S3_BUCKET/'$S3_BUCKET'/' \
+      |sed 's/REGION/'$REGION'/' \
+      |sed 's|ENDPOINT|'$ENDPOINT'|' \
+      |oc apply -f -
   ```
 
 - Verify that BackupStorageLocation is ready
   
   ```bash
-  oc get BackupStorageLocation -n openshift-adp
+  watch oc get BackupStorageLocation -n openshift-adp
   ```
   
   Output
