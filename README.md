@@ -309,7 +309,7 @@ Prepare your Object Storage configuration. In case of Amazon S3
       - velero:
           config:
             profile: "default"
-            region: REGION # In case of minio, use minio
+            # region: REGION # In case of minio, use minio
             # In case of Minio, http://minio.minio.svc.cluster.local:80
             s3Url: ENDPOINT 
             insecureSkipTLSVerify: "true"
@@ -330,7 +330,6 @@ Prepare your Object Storage configuration. In case of Amazon S3
   ```bash
   cat config/DataProtectionApplication.yaml \
       |sed 's/S3_BUCKET/'$S3_BUCKET'/' \
-      |sed 's/REGION/'$REGION'/' \
       |sed 's|ENDPOINT|'$ENDPOINT'|' \
       |oc apply -f -
   ```
@@ -338,7 +337,7 @@ Prepare your Object Storage configuration. In case of Amazon S3
 - Verify that BackupStorageLocation is ready
   
   ```bash
-  watch oc get BackupStorageLocation -n openshift-adp
+  oc get BackupStorageLocation -n openshift-adp
   ```
   
   Output
