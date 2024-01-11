@@ -1,6 +1,7 @@
 # OADP
 - [OADP](#oadp)
   - [Object Storage Preparation](#object-storage-preparation)
+    - [ODF](#odf)
     - [AWS S3](#aws-s3)
     - [MinIO](#minio)
   - [Sample Todo App](#sample-todo-app)
@@ -18,6 +19,32 @@ Prepare your Object Storage configuration. In case of Amazon S3
 - Region
 - Access Key ID
 - Access Key
+### ODF
+- Prepare Object Storage configuration including S3 access Key ID, access Key Secret, Bucket Name, endpoint and Region
+- Create Bucket
+  - Admin Console
+    - Navigate to Storage -> Object Storage -> Object Bucket Claims
+    - Create ObjectBucketClaim
+      - Claim Name: *oadp*
+      - StorageClass: *openshift-storage.nooba.io*
+      - BucketClass: *nooba-default-bucket-class*
+                        
+  - Command line with [oadp-odf-bucket.yaml](config/oadp-odf-bucket.yaml)
+                
+    ```bash
+    oc create -f config/oadp-odf-bucket.yaml
+    ```
+  - Retrieve configuration into environment variables
+
+    ```bash
+    S3_BUCKET=$(oc get ObjectBucketClaim oadp -n openshift-storage -o jsonpath='{.spec.bucketName}')
+    REGION="''"
+    ACCESS_KEY_ID=$(oc get secret oadp -n openshift-storage -o jsonpath='{.data.AWS_ACCESS_KEY_ID}'|base64 -d)
+    SECRET_ACCESS_KEY=$(oc get secret oadp -n openshift-storage -o jsonpath='{.data.AWS_SECRET_ACCESS_KEY}'|base64 -d)
+    ENDPOINT="https://s3.openshift-storage.svc:443"
+    DEFAULT_STORAGE_CLASS=$(oc get sc -A -o jsonpath='{.items[?(@.metadata.annotations.storageclass\.kubernetes\.io/is-default-class=="true")].metadata.name}')
+    ``` 
+
 ### AWS S3
 - This demo use existing S3 bucket used by OpenShift's Image Registry
   
