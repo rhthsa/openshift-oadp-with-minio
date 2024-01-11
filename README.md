@@ -206,7 +206,7 @@ Prepare your Object Storage configuration. In case of Amazon S3
   servicemonitor.monitoring.coreos.com/todo created
   route.route.openshift.io/todo created
   ```
-- Setup Database
+<!-- - Setup Database
   
   ```bash
   TODO_DB_POD=$(oc get po -l app=todo-db -n todo --no-headers|awk '{print $1}')
@@ -232,7 +232,7 @@ Prepare your Object Storage configuration. In case of Amazon S3
         primary key (id)
       );
   CREATE TABLE
-  ```
+  ``` -->
 - Add couple of your tasks to todo app
   
   ![](images/todo-app.png)
