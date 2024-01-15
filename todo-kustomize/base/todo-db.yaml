@@ -14,23 +14,23 @@ spec:
     requests:
       storage: 1Gi
   # storageClassName: gp3-csi
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: todo-db-init-data
-  namespace: todo
-  # annotations:
-  #   volume.beta.kubernetes.io/storage-provisioner: kubernetes.io/aws-ebs
-  labels:
-    app: todo-db
-spec:
-  accessModes:
-  - ReadWriteOnce
-  resources:
-    requests:
-      storage: 10Mi
-  # storageClassName: gp3-csi
+# ---
+# apiVersion: v1
+# kind: PersistentVolumeClaim
+# metadata:
+#   name: todo-db-init-data
+#   namespace: todo
+#   # annotations:
+#   #   volume.beta.kubernetes.io/storage-provisioner: kubernetes.io/aws-ebs
+#   labels:
+#     app: todo-db
+# spec:
+#   accessModes:
+#   - ReadWriteOnce
+#   resources:
+#     requests:
+#       storage: 10Mi
+#   #storageClassName: gp3-csi
 ---
 apiVersion: v1
 kind: Secret
@@ -44,19 +44,19 @@ data:
   database-name: dG9kbw==
   database-password: dG9kb1Bhc3N3b3Jk
   database-user: dG9kbw==
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  labels:
-    app: todo-db
-  name: todo-db-init
-  namespace: todo
-data:
-  get-data.sh: |-
-    #!/bin/bash
+# ---
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   labels:
+#     app: todo-db
+#   name: todo-db-init
+#   namespace: todo
+# data:
+#   get-data.sh: |-
+#     #!/bin/bash
 
-    curl https://raw.githubusercontent.com/voraviz/quarkus-todo-app/master/todo/etc/init-db.sql --output /docker-entrypoint-initdb.d/1-init-tables.sql
+#     curl https://raw.githubusercontent.com/voraviz/quarkus-todo-app/master/todo/etc/init-db.sql --output /docker-entrypoint-initdb.d/1-init-tables.sql
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -99,44 +99,24 @@ spec:
             secretKeyRef:
               key: database-name
               name: todo-db
-        #image: image-registry.openshift-image-registry.svc:5000/openshift/postgresql:latest
-        image: bitnami/postgresql:14
+        image: image-registry.openshift-image-registry.svc:5000/openshift/postgresql:latest
+        #image: bitnami/postgresql:14
         imagePullPolicy: Always
         resources:
           limits:
             cpu: "1"
             memory: 1024Mi
-        # livenessProbe:
-        #   exec:
-        #     command:
-        #     - /usr/libexec/check-container
-        #     - --live
-        #   failureThreshold: 3
-        #   initialDelaySeconds: 120
-        #   periodSeconds: 10
-        #   successThreshold: 1
-        #   timeoutSeconds: 10
         name: postgresql
         ports:
         - containerPort: 5432
           protocol: TCP
-        # readinessProbe:
-        #   exec:
-        #     command:
-        #     - /usr/libexec/check-container
-        #   failureThreshold: 3
-        #   initialDelaySeconds: 5
-        #   periodSeconds: 10
-        #   successThreshold: 1
-        #   timeoutSeconds: 1
-        #   privileged: false
         terminationMessagePath: /dev/termination-log
         terminationMessagePolicy: File
         volumeMounts:
           - mountPath: /var/lib/pgsql/data
             name: todo-db-data
-          - mountPath: /docker-entrypoint-initdb.d
-            name: todo-db-init-data
+          # - mountPath: /docker-entrypoint-initdb.d
+          #   name: todo-db-init-data
         securityContext:
           seccompProfile: #"RuntimeDefault" or "Localhost"
             type: RuntimeDefault
@@ -149,29 +129,29 @@ spec:
       restartPolicy: Always
       schedulerName: default-scheduler
       terminationGracePeriodSeconds: 30
-      initContainers:
-        - command:
-            - sh
-            - get-data.sh
-          image: registry.access.redhat.com/ubi8-minimal:latest
-          name: get-data
-          volumeMounts:
-            - mountPath: /docker-entrypoint-preinitdb.d
-              name: todo-db-init
-            - mountPath: /docker-entrypoint-initdb.d
-              name: todo-db-init-data
-          workingDir: /docker-entrypoint-preinitdb.d    
+      # initContainers:
+      #   - command:
+      #       - sh
+      #       - get-data.sh
+      #     image: registry.access.redhat.com/ubi8-minimal:latest
+      #     name: get-data
+      #     volumeMounts:
+      #       - mountPath: /docker-entrypoint-preinitdb.d
+      #         name: todo-db-init
+      #       - mountPath: /docker-entrypoint-initdb.d
+      #         name: todo-db-init-data
+      #     workingDir: /docker-entrypoint-preinitdb.d    
       volumes:
         - name: todo-db-data
           persistentVolumeClaim:
             claimName: todo-db
-        - name: todo-db-init-data
-          # emptyDir: {}
-          persistentVolumeClaim:
-            claimName: todo-db-init-data
-        - configMap:
-            name: todo-db-init
-          name: todo-db-init
+        # - name: todo-db-init-data
+        #   # emptyDir: {}
+        #   persistentVolumeClaim:
+        #     claimName: todo-db-init-data
+        # - configMap:
+        #     name: todo-db-init
+        #   name: todo-db-init
 ---
 apiVersion: v1
 kind: Service

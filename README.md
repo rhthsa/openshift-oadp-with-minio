@@ -38,7 +38,7 @@ Prepare your Object Storage configuration. In case of Amazon S3
 
     ```bash
     S3_BUCKET=$(oc get ObjectBucketClaim oadp -n openshift-storage -o jsonpath='{.spec.bucketName}')
-    REGION="''"
+    REGION="us-east-1"
     ACCESS_KEY_ID=$(oc get secret oadp -n openshift-storage -o jsonpath='{.data.AWS_ACCESS_KEY_ID}'|base64 -d)
     SECRET_ACCESS_KEY=$(oc get secret oadp -n openshift-storage -o jsonpath='{.data.AWS_SECRET_ACCESS_KEY}'|base64 -d)
     ENDPOINT="https://s3.openshift-storage.svc:443"
@@ -233,12 +233,12 @@ Prepare your Object Storage configuration. In case of Amazon S3
   servicemonitor.monitoring.coreos.com/todo created
   route.route.openshift.io/todo created
   ```
-<!-- - Setup Database
+- Setup Database
   
   ```bash
   TODO_DB_POD=$(oc get po -l app=todo-db -n todo --no-headers|awk '{print $1}')
   oc cp config/todo.sql $TODO_DB_POD:/tmp -n todo
-  oc exec $TODO_DB_POD -- psql -Utodo -dtodo -a -f /tmp/todo.sql
+  oc exec -n todo $TODO_DB_POD -- psql -Utodo -dtodo -a -f /tmp/todo.sql
   ```
 
   Output
@@ -246,9 +246,9 @@ Prepare your Object Storage configuration. In case of Amazon S3
   ```bash
   drop table if exists Todo;
   DROP TABLE
-  drop sequence if exists Todo_SEQ;
+  drop sequence if exists hibernate_sequence;
   DROP SEQUENCE
-  create sequence Todo_SEQ start 1 increment 1;
+  create sequence hibernate_sequence start 1 increment 1;
   CREATE SEQUENCE
   create table Todo (
         id int8 not null,
@@ -259,7 +259,11 @@ Prepare your Object Storage configuration. In case of Amazon S3
         primary key (id)
       );
   CREATE TABLE
-  ``` -->
+  alter table if exists Todo
+      add constraint unique_title unique (title);
+  ALTER TABLE
+  ```
+
 - Add couple of your tasks to todo app
   
   ![](images/todo-app.png)
@@ -309,7 +313,7 @@ Prepare your Object Storage configuration. In case of Amazon S3
       - velero:
           config:
             profile: "default"
-            # region: REGION # In case of minio, use minio
+            region: REGION # In case of ODF use available AWS zone , Minio use minio
             # In case of Minio, http://minio.minio.svc.cluster.local:80
             s3Url: ENDPOINT 
             insecureSkipTLSVerify: "true"
@@ -331,6 +335,7 @@ Prepare your Object Storage configuration. In case of Amazon S3
   cat config/DataProtectionApplication.yaml \
       |sed 's/S3_BUCKET/'$S3_BUCKET'/' \
       |sed 's|ENDPOINT|'$ENDPOINT'|' \
+      |sed 's|REGION|'$REGION'|' \
       |oc apply -f -
   ```
 
@@ -689,6 +694,7 @@ Prepare your Object Storage configuration. In case of Amazon S3
   mc alias set minio <URL> <KEY> <SECRET>
   mc alais ls
   ```
+
 - Copy from bucket cluster1 to current directory
   
   ```bash
@@ -731,4 +737,10 @@ Prepare your Object Storage configuration. In case of Amazon S3
 
   ```bash
   .../restore-todo-results.gz: 19.52 MiB / 19.52 MiB ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.83 MiB/s 4s
+  ```
+
+- List bucket
+  
+  ```bash
+  mc ls --recursive <alias>/<bucket>
   ```

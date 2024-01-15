@@ -9,3 +9,5 @@ create table Todo (
        url varchar(255),
        primary key (id)
     );
+alter table if exists Todo
+    add constraint unique_title unique (title);
