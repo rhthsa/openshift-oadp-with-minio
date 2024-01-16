@@ -688,13 +688,18 @@ Prepare your Object Storage configuration. In case of Amazon S3
 
 # Minio Client
 - Install [Minio Client](https://github.com/minio/mc)
-- Configure alias to MinIO with alias name minio
+- Configure alias to MinIO/S3 compat
   
   ```bash
-  mc alias set minio <URL> <KEY> <SECRET>
+  mc alias set <alias name> <URL> <ACCESS_KEY_ID> <ACCESS_KEY_ID>
   mc alais ls
   ```
-
+- List bucket
+  
+  ```bash
+  mc ls --recursive <alias>/<bucket>
+  ```
+  
 - Copy from bucket cluster1 to current directory
   
   ```bash
@@ -739,8 +744,3 @@ Prepare your Object Storage configuration. In case of Amazon S3
   .../restore-todo-results.gz: 19.52 MiB / 19.52 MiB ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.83 MiB/s 4s
   ```
 
-- List bucket
-  
-  ```bash
-  mc ls --recursive <alias>/<bucket>
-  ```
