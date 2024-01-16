@@ -1,0 +1,32 @@
+ apiVersion: oadp.openshift.io/v1alpha1
+ kind: DataProtectionApplication
+ metadata:
+   name: app-backup
+   namespace: openshift-adp
+ spec:
+   backupImages: false
+   configuration:
+     nodeAgent:
+       enable: true
+       uploaderType: kopia
+     velero:
+       defaultPlugins:
+         - aws
+         - openshift 
+         - csi
+   backupLocations:
+     - velero:
+         config:
+           profile: "default"
+           region: REGION # In case of minio, use minio
+           s3Url: ENDPOINT 
+           insecureSkipTLSVerify: "true"
+           s3ForcePathStyle: "true"
+         provider: aws
+         default: true
+         credential:
+           key: cloud
+           name: cloud-credentials # Default. Can be removed 
+         objectStorage:
+           bucket: S3_BUCKET
+           prefix: todo # Optional
