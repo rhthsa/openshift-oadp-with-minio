@@ -688,6 +688,11 @@ Prepare your Object Storage configuration. In case of Amazon S3
 
 # Minio Client
 - Install [Minio Client](https://github.com/minio/mc)
+  - For OSX
+    
+    ```bash
+    brew install mc
+    ```
 - Configure alias to MinIO/S3 compat
   
   ```bash
@@ -699,6 +704,11 @@ Prepare your Object Storage configuration. In case of Amazon S3
   ```bash
   mc ls --recursive <alias>/<bucket>
   ```
+
+  Example
+
+  ![](images/minio-cli-ls.png)
+
   
 - Copy from bucket cluster1 to current directory
   
