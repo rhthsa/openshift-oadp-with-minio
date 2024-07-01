@@ -7,7 +7,10 @@ metadata:
     velero.io/storage-location: default
   namespace: openshift-adp
 spec:
-  defaultVolumesToRestic: true
+  #defaultVolumesToRestic: true OADP 1.1
+  csiSnapshotTimeout: 10m0s
+  defaultVolumesToFsBackup: false # disable restic
+  snapshotMoveData: true
   hooks: {}
   includedNamespaces:
   - todo
