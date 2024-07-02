@@ -3,7 +3,6 @@
   - [Object Storage Preparation](#object-storage-preparation)
     - [ODF](#odf)
     - [AWS S3](#aws-s3)
-    - [MinIO](#minio)
   - [Sample Todo App](#sample-todo-app)
   - [OADP Operator](#oadp-operator)
     - [Backup](#backup)
@@ -11,7 +10,9 @@
     - [Restore](#restore)
   - [Monitor OADP](#monitor-oadp)
   - [Restore from another cluster](#restore-from-another-cluster)
-- [Minio Client](#minio-client)
+- [Minio](#minio)
+  - [MinIO Operator](#minio-operator)
+  - [MinIO Client](#minio-client)
 
 ## Object Storage Preparation
 Prepare your Object Storage configuration. In case of Amazon S3
@@ -55,163 +56,7 @@ Prepare your Object Storage configuration. In case of Amazon S3
   AWS_SECRET_ACCESS_KEY=$(oc get secret image-registry-private-configuration -o jsonpath='{.data.credentials}' -n openshift-image-registry|base64 -d|grep aws_secret_access_key|awk -F'=' '{print $2}'|sed 's/^[ ]*//')
 
   ```
-### MinIO
 
-- Install Minio Operator from OperatorHub
-  
-  ![](images/minio-operator-operatorhub.png)
-
-
-- Install [minIO kubctl plugin](https://docs.min.io/minio/k8s/tenant-management/deploy-minio-tenant-using-commandline.html)
-
-
-- Initial tenant
-  
-  ```bash
-  kubectl minio init -n openshift-operators
-  ```
-
-- Check service on namespace openshift-operators
-  
-  ```bash
-  oc get svc/console -n openshift-operators
-  ```
-
-  Output
-
-  ```bash
-  NAME      TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)             AGE
-  console   ClusterIP   172.30.109.205   <none>        9090/TCP,9443/TCP   11m
-  ```
-
-- Create route for MinIO console
-  
-  ```bash
-  oc create route edge minio-console --service=console --port=9090 -n openshift-operators
-  ```
-
-  ![](images/minio-dev-console-topology.png)
-
-- Login with JWT token extracted from secret
-
-  ```bash
-  oc get secret/console-sa-secret -o jsonpath='{.data.token}' -n openshift-operators | base64 -d
-  ```
-  
-  ![](images/minio-operator-console.png)
-
-- Create project minio
-  
-  ```bash
-  oc new-project minio --description="Object Storage for OADP"
-  ```
-
-- Check ID from minio
-
-  ```bash
-  oc get ns minio -o=jsonpath='{.metadata.annotations.openshift\.io/sa\.scc\.supplemental-groups}'
-  ```
-    
-  Write down the number before slash (/). You need this ID when configure tenant
-
-- Create tenant with MinIO Console
-  - Setup: tenant name, namespace, capacity and requests/limits
-    
-    ![](images/minio-console-setup-tenant.png)
-
-  - Configure: Disable expose MinIO Service and Console (We will create OpenShift's route manually) enable security context with number extracted from namespace supplemental-groups
-
-    ![](images/minio-console-configure.png)
-  
-  - Pod placement: Set to None in case your environment is small not have many nodes to do pod anti-affinity
-    
-    ![](images/minio-console-pod-placement.png)
-
-  - Identiy Provider: add user
-  
-    ![](images/minio-console-identity-provider.png)
-
-  - Security: Disable TLS
-
-    ![](images/minio-console-security.png)
-
-  - Audit: Disabled
-  - Monitoring: Disabled
-  - Click Create and wait for tenant creation
-
-    ![](images/minio-tenant-creation-on-progress.png)
-
-- Edit Security Context for console
-  - Login to OpenShift Admin Console
-  - Select namespace minio
-  - Operators->Installed Operators->Minio Operator->Tenant
-  - Edit YAML. Add following lines to spec:
-    
-    ```yaml
-    console:
-      securityContext:
-        fsGroup: <supplemental-groups>
-        runAsGroup: <supplemental-groups>
-        runAsNonRoot: true
-        runAsUser: <supplemental-groups> 
-    ```
-
-- Verify that Tenant is up and running
-
-  ![](images/minio-console-tenant-ready.png)
-
-  Details
-
-  ![](images/minio-console-tenant.png)
-
-  check stateful set
-
-  ```bash
-  oc get statefulset -n minio
-  ```
-
-  Output
-
-  ```bash
-  NAME              READY   AGE
-  cluster1-pool-0   4/4     18m
-  ```
-
-- Verify CPU and Memory consumed by MinIO in namesapce minio
-  
-  CPU utilization 
-
-  ![](images/minio-cpu-request-limit.png)
-
-  Memory utilization
-
-  ![](images/minio-memory-reqeust-limit.png)
-
-- Create Route for Tenant Console
-
-  ```bash
-  oc create route edge oadp-console --service=oadp-console --port=9090 -n minio
-  ```
-
-- Create Route for Minio
-
-  ```bash
-  oc create route edge minio --service=minio -n minio
-  ```
-
-- Login to tenant console with user you specified while creating tenant and create bucket name cluster1 
-  
-  Login page
-
-  ![](images/tenant-console-login.png)
-
-  Create bucket
-
-  ![](images/tenant-console-create-bucket.png)
-
-- Create Service Account for OADP
-  
-  ![](images/tenant-create-service-account.png)
 
 ## Sample Todo App
 
@@ -444,7 +289,7 @@ Prepare your Object Storage configuration. In case of Amazon S3
     NAME   STATUS      ERRORS   WARNINGS   CREATED                         EXPIRES   STORAGE LOCATION   SELECTOR
     todo   Completed   0        0          2024-07-01 16:18:04 +0700 +07   28d       app-backup-1       <none>
     ```
-    
+
 - Check data in S3 bucket with mc command
     - Config alias
       
@@ -739,7 +584,165 @@ Prepare your Object Storage configuration. In case of Amazon S3
 - Create [DataProtectionApplication](config/DataProtectionApplication.yaml) with s3url point to minio's route
 - Create [Restore](config/restore-todo.yaml)
 
-# Minio Client
+# Minio
+## MinIO Operator
+
+- Install Minio Operator from OperatorHub
+  
+  ![](images/minio-operator-operatorhub.png)
+
+
+- Install [minIO kubctl plugin](https://docs.min.io/minio/k8s/tenant-management/deploy-minio-tenant-using-commandline.html)
+
+
+- Initial tenant
+  
+  ```bash
+  kubectl minio init -n openshift-operators
+  ```
+
+- Check service on namespace openshift-operators
+  
+  ```bash
+  oc get svc/console -n openshift-operators
+  ```
+
+  Output
+
+  ```bash
+  NAME      TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)             AGE
+  console   ClusterIP   172.30.109.205   <none>        9090/TCP,9443/TCP   11m
+  ```
+
+- Create route for MinIO console
+  
+  ```bash
+  oc create route edge minio-console --service=console --port=9090 -n openshift-operators
+  ```
+
+  ![](images/minio-dev-console-topology.png)
+
+- Login with JWT token extracted from secret
+
+  ```bash
+  oc get secret/console-sa-secret -o jsonpath='{.data.token}' -n openshift-operators | base64 -d
+  ```
+  
+  ![](images/minio-operator-console.png)
+
+- Create project minio
+  
+  ```bash
+  oc new-project minio --description="Object Storage for OADP"
+  ```
+
+- Check ID from minio
+
+  ```bash
+  oc get ns minio -o=jsonpath='{.metadata.annotations.openshift\.io/sa\.scc\.supplemental-groups}'
+  ```
+    
+  Write down the number before slash (/). You need this ID when configure tenant
+
+- Create tenant with MinIO Console
+  - Setup: tenant name, namespace, capacity and requests/limits
+    
+    ![](images/minio-console-setup-tenant.png)
+
+  - Configure: Disable expose MinIO Service and Console (We will create OpenShift's route manually) enable security context with number extracted from namespace supplemental-groups
+
+    ![](images/minio-console-configure.png)
+  
+  - Pod placement: Set to None in case your environment is small not have many nodes to do pod anti-affinity
+    
+    ![](images/minio-console-pod-placement.png)
+
+  - Identiy Provider: add user
+  
+    ![](images/minio-console-identity-provider.png)
+
+  - Security: Disable TLS
+
+    ![](images/minio-console-security.png)
+
+  - Audit: Disabled
+  - Monitoring: Disabled
+  - Click Create and wait for tenant creation
+
+    ![](images/minio-tenant-creation-on-progress.png)
+
+- Edit Security Context for console
+  - Login to OpenShift Admin Console
+  - Select namespace minio
+  - Operators->Installed Operators->Minio Operator->Tenant
+  - Edit YAML. Add following lines to spec:
+    
+    ```yaml
+    console:
+      securityContext:
+        fsGroup: <supplemental-groups>
+        runAsGroup: <supplemental-groups>
+        runAsNonRoot: true
+        runAsUser: <supplemental-groups> 
+    ```
+
+- Verify that Tenant is up and running
+
+  ![](images/minio-console-tenant-ready.png)
+
+  Details
+
+  ![](images/minio-console-tenant.png)
+
+  check stateful set
+
+  ```bash
+  oc get statefulset -n minio
+  ```
+
+  Output
+
+  ```bash
+  NAME              READY   AGE
+  cluster1-pool-0   4/4     18m
+  ```
+
+- Verify CPU and Memory consumed by MinIO in namesapce minio
+  
+  CPU utilization 
+
+  ![](images/minio-cpu-request-limit.png)
+
+  Memory utilization
+
+  ![](images/minio-memory-reqeust-limit.png)
+
+- Create Route for Tenant Console
+
+  ```bash
+  oc create route edge oadp-console --service=oadp-console --port=9090 -n minio
+  ```
+
+- Create Route for Minio
+
+  ```bash
+  oc create route edge minio --service=minio -n minio
+  ```
+
+- Login to tenant console with user you specified while creating tenant and create bucket name cluster1 
+  
+  Login page
+
+  ![](images/tenant-console-login.png)
+
+  Create bucket
+
+  ![](images/tenant-console-create-bucket.png)
+
+- Create Service Account for OADP
+  
+  ![](images/tenant-create-service-account.png)
+## MinIO Client
 - Install [Minio Client](https://github.com/minio/mc)
   - For OSX
     
