@@ -425,6 +425,26 @@ Prepare your Object Storage configuration. In case of Amazon S3
     "version": 1
   }
   ``` -->
+- Use velero cli to check backup
+  - Config velero client to use namespace openshift-adp
+    
+    ```bash
+    velero client config set namespace=openshift-adp
+    ```
+
+  - List backup
+    
+    ```bash
+    velero get backup
+    ```
+    
+    output
+    
+    ```bash
+    NAME   STATUS      ERRORS   WARNINGS   CREATED                         EXPIRES   STORAGE LOCATION   SELECTOR
+    todo   Completed   0        0          2024-07-01 16:18:04 +0700 +07   28d       app-backup-1       <none>
+    ```
+    
 - Check data in S3 bucket with mc command
     - Config alias
       
