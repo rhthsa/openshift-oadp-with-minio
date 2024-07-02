@@ -294,40 +294,41 @@ Prepare your Object Storage configuration. In case of Amazon S3
     - REGION
     - ENDPOINT
     - S3_BUCKET
-  
-  ```yaml
-  apiVersion: oadp.openshift.io/v1alpha1
-  kind: DataProtectionApplication
-  metadata:
-    name: app-backup
-    namespace: openshift-adp
-  spec:
-    configuration:
-      velero:
-        defaultPlugins:
-          - aws
-          - openshift 
-      restic:
-        enable: true # If you don't have CSI then you need to enable restic
-    backupLocations:
-      - velero:
-          config:
-            profile: "default"
-            region: REGION # In case of ODF use available AWS zone , Minio use minio
-            # In case of Minio, http://minio.minio.svc.cluster.local:80
-            s3Url: ENDPOINT 
-            insecureSkipTLSVerify: "true"
-            s3ForcePathStyle: "false"
-          provider: aws
-          default: true
-          credential:
-            key: cloud
-            name: cloud-credentials # Default. Can be removed 
-          objectStorage:
-            bucket: S3_BUCKET
-            prefix: oadp # Optional
 
-  ```
+    ```yaml
+    apiVersion: oadp.openshift.io/v1alpha1
+    kind: DataProtectionApplication
+    metadata:
+      name: app-backup
+      namespace: openshift-adp
+    spec:
+      backupImages: false
+      configuration:
+        nodeAgent:
+          enable: true
+          uploaderType: kopia
+        velero:
+          defaultPlugins:
+            - aws
+            - openshift 
+            - csi
+      backupLocations:
+        - velero:
+            config:
+              profile: "default"
+              region: REGION # In case of minio, use minio
+              s3Url: ENDPOINT 
+              insecureSkipTLSVerify: "true"
+              s3ForcePathStyle: "true"
+            provider: aws
+            default: true
+            credential:
+              key: cloud
+              name: cloud-credentials # Default. Can be removed 
+            objectStorage:
+              bucket: S3_BUCKET
+              prefix: todo
+    ```
 
 - Run following command
   
@@ -343,13 +344,15 @@ Prepare your Object Storage configuration. In case of Amazon S3
   
   ```bash
   oc get BackupStorageLocation -n openshift-adp
+  oc get BackupStorageLocation app-backup-1 -n openshift-adp -o jsonpath='{.status}'
   ```
   
   Output
   
   ```
-  NAME           PHASE       LAST VALIDATED   AGE    DEFAULT
-  app-backup-1   Available   36s              2m2s   true
+  NAME           PHASE       LAST VALIDATED   AGE     DEFAULT
+  app-backup-1   Available   20s              3m48s   true
+  {"lastSyncedTime":"2024-07-01T08:47:06Z","lastValidationTime":"2024-07-01T08:47:06Z","phase":"Available"}
   ```
   
   ![](images/oadp-operator-backupstoragelocation.png)
@@ -391,19 +394,21 @@ Prepare your Object Storage configuration. In case of Amazon S3
   
   ```json
   {
-    "completionTimestamp": "2022-08-30T09:50:00Z",
-    "expiration": "2022-09-29T09:49:24Z",
+    "backupItemOperationsAttempted": 1,
+    "backupItemOperationsCompleted": 1,
+    "completionTimestamp": "2024-07-01T09:18:48Z",
+    "expiration": "2024-07-31T09:18:04Z",
     "formatVersion": "1.1.0",
     "phase": "Completed",
     "progress": {
-      "itemsBackedUp": 69,
-      "totalItems": 69
+      "itemsBackedUp": 68,
+      "totalItems": 68
     },
-    "startTimestamp": "2022-08-30T09:49:24Z",
+    "startTimestamp": "2024-07-01T09:18:04Z",
     "version": 1
   }
   ```
-
+<!-- 
   Test with 10GB data
 
   ```json
@@ -419,11 +424,39 @@ Prepare your Object Storage configuration. In case of Amazon S3
     "startTimestamp": "2022-10-12T12:50:18Z",
     "version": 1
   }
-  ```
+  ``` -->
+- Check data in S3 bucket with mc command
+    - Config alias
+      
+      ```bash
+      mc alias set oadp https://<URL> $ACCESS_KEY_ID $SECRET_ACCESS_KEY
+      ```
 
-- Check data in MinIO
-  
-  ![](images/minio-bucket.png)
+    - List data in bucket
+      
+      ```bash
+      mc ls --recursive oadp/$S3_BUCKET
+      ```
+
+      Output
+
+      ```bash
+      [2024-07-01 16:18:18 +07]    29B STANDARD todo/backups/todo/todo-csi-volumesnapshotclasses.json.gz
+      [2024-07-01 16:18:18 +07]    29B STANDARD todo/backups/todo/todo-csi-volumesnapshotcontents.json.gz
+      [2024-07-01 16:18:18 +07]    29B STANDARD todo/backups/todo/todo-csi-volumesnapshots.json.gz
+      [2024-07-01 16:18:46 +07]   371B STANDARD todo/backups/todo/todo-itemoperations.json.gz
+      [2024-07-01 16:18:17 +07]  11KiB STANDARD todo/backups/todo/todo-logs.gz
+      [2024-07-01 16:18:18 +07]    29B STANDARD todo/backups/todo/todo-podvolumebackups.json.gz
+      [2024-07-01 16:18:18 +07]   791B STANDARD todo/backups/todo/todo-resource-list.json.gz
+      [2024-07-01 16:18:18 +07]    49B STANDARD todo/backups/todo/todo-results.gz
+      [2024-07-01 16:18:18 +07]    29B STANDARD todo/backups/todo/todo-volumesnapshots.json.gz
+      [2024-07-01 16:18:48 +07]  95KiB STANDARD todo/backups/todo/todo.tar.gz
+      [2024-07-01 16:18:48 +07] 3.1KiB STANDARD todo/backups/todo/velero-backup.json
+      ```
+      
+  <!-- - Check data in MinIO
+    
+    ![](images/minio-bucket.png) -->
 
 ### Schedule Backup
 
@@ -696,7 +729,7 @@ Prepare your Object Storage configuration. In case of Amazon S3
 - Configure alias to MinIO/S3 compat
   
   ```bash
-  mc alias set <alias name> <URL> <ACCESS_KEY_ID> <ACCESS_KEY_ID>
+  mc alias set <alias name> <URL> <ACCESS_KEY_ID> <SECRETKEY>
   mc alais ls
   ```
 - List bucket
